@@ -30,8 +30,7 @@ public class WebServiceUtils {
 
     public static final String LOG_TAG = WebServiceUtils.class.getName();
 
-    public static JSONObject requestJSONObject(String serviceUrl, METHOD method,
-                                               ContentValues urlValues, ContentValues headerValues, boolean hasAuthorization) {
+    public static JSONObject requestJSONObject(String serviceUrl, METHOD method, ContentValues headerValues, boolean hasAuthorization) {
 
 
         return requestJSONObject(serviceUrl, method, headerValues, null, null, hasAuthorization);
@@ -39,7 +38,7 @@ public class WebServiceUtils {
 
     public static JSONObject requestJSONObject(String serviceUrl, METHOD method,
                                                ContentValues urlValues, ContentValues bodyValues) {
-        return requestJSONObject(serviceUrl, method, urlValues, bodyValues, false);
+        return requestJSONObject(serviceUrl, method, bodyValues, false);
     }
 
     public static JSONObject requestJSONObject(String serviceUrl, METHOD method,
