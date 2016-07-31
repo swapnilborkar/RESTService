@@ -1,5 +1,6 @@
 package com.swapnilborkar.restservice;
 
+import android.content.ContentValues;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -7,6 +8,10 @@ import android.widget.EditText;
 
 import com.swapnilborkar.restservice.data.User;
 import com.swapnilborkar.restservice.webservices.WebServiceTask;
+import com.swapnilborkar.restservice.webservices.WebServiceUtils;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,10 +57,6 @@ public class MainActivity extends AppCompatActivity {
         mNoteText.setText(user.getNote() == null ? "" : user.getNote());
     }
 
-    private interface ConfirmationListener {
-        void onConfirmation(boolean isConfirmed);
-    }
-
     private abstract class ActivityWebServiceTask extends WebServiceTask {
         ActivityWebServiceTask(WebServiceTask webServiceTask) {
             super(MainActivity.this);
@@ -64,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void showProgress() {
             MainActivity.this.showProgress(true);
-
         }
 
         @Override
@@ -85,7 +85,37 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean performRequest() {
-            return true;
+            ContentValues contentValues = new ContentValues();
+            User user = RESTServiceApplication.getInstance().getUser();
+            contentValues.put(Constants.ID, user.getId());
+            contentValues.put(Constants.ACCESS_TOKEN, RESTServiceApplication.getInstance().getAccessToken());
+            JSONObject jsonObject = WebServiceUtils
+                    .requestJSONObject(Constants.INFO_URL, WebServiceUtils.METHOD.GET, contentValues, null);
+
+            if (hasError(jsonObject)) {
+                JSONArray jsonArray = jsonObject.optJSONArray(Constants.INFO);
+                JSONObject jsonObject1 = jsonArray.optJSONObject(0);
+
+                user.setName(jsonObject1.optString(Constants.NAME));
+                if (user.getName().equalsIgnoreCase("null")) {
+                    user.setName(null);
+                }
+
+                user.setPhoneNumber(jsonObject1.optString(Constants.PHONE_NUMBER));
+                if (user.getPhoneNumber().equalsIgnoreCase("null")) {
+                    user.setPhoneNumber(null);
+                }
+
+                user.setNote(jsonObject1.optString(Constants.NOTE));
+                if (user.getNote().equalsIgnoreCase("null")) {
+                    user.setNote(null);
+                }
+
+                user.setId(jsonObject1.optLong(Constants.ID_INFO));
+                return true;
+            }
+
+            return false;
         }
     }
 
