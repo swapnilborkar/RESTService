@@ -1,10 +1,14 @@
 package com.swapnilborkar.restservice;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.swapnilborkar.restservice.data.User;
 import com.swapnilborkar.restservice.webservices.WebServiceTask;
@@ -57,6 +61,84 @@ public class MainActivity extends AppCompatActivity {
         mNoteText.setText(user.getNote() == null ? "" : user.getNote());
     }
 
+    public void clickUpdateButton(View view) {
+        if (mPasswordText.getText().toString().trim().length() >= 5) {
+            showProgress(true);
+            mUserEditTask = new UserEditTask();
+            mUserEditTask.execute();
+        } else {
+            Toast.makeText(this, R.string.error_password_length, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void clickDeleteButton(View view) {
+        showConfigurationDialog(new ConfirmationListener() {
+            @Override
+            public void onConfirmation(boolean isConfirmed) {
+                if (isConfirmed) {
+                    showProgress(true);
+                    mUserDeleteTask = new UserDeleteTask();
+                    mUserDeleteTask.execute();
+                }
+            }
+        });
+
+    }
+
+    public void clickResetButton(View view) {
+        showConfigurationDialog(new ConfirmationListener() {
+            @Override
+            public void onConfirmation(boolean isConfirmed) {
+                if (isConfirmed) {
+                    showProgress(true);
+                    mUserResetTask = new UserResetTask();
+                    mUserResetTask.execute();
+                }
+            }
+        });
+    }
+
+    public void clickSignOutButton(View view) {
+        showLoginScreen();
+    }
+
+    private void showLoginScreen() {
+        Intent intent = new Intent(MainActivity.this, LoginRegisterActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    private void showConfigurationDialog(final ConfirmationListener confirmationListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Confirmation");
+        builder.setMessage("Are you sure? This action cannot be undone!");
+
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                confirmationListener.onConfirmation(false);
+                dialogInterface.dismiss();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                confirmationListener.onConfirmation(true);
+                dialogInterface.dismiss();
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.setCancelable(true);
+        alertDialog.show();
+
+    }
+
+    private interface ConfirmationListener {
+        void onConfirmation(boolean isConfirmed);
+    }
+
     private abstract class ActivityWebServiceTask extends WebServiceTask {
         ActivityWebServiceTask(WebServiceTask webServiceTask) {
             super(MainActivity.this);
@@ -92,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             JSONObject jsonObject = WebServiceUtils
                     .requestJSONObject(Constants.INFO_URL, WebServiceUtils.METHOD.GET, contentValues, null);
 
-            if (hasError(jsonObject)) {
+            if (!hasError(jsonObject)) {
                 JSONArray jsonArray = jsonObject.optJSONArray(Constants.INFO);
                 JSONObject jsonObject1 = jsonArray.optJSONObject(0);
 
@@ -126,7 +208,33 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean performRequest() {
-            return true;
+
+            ContentValues contentValues = new ContentValues();
+            User user = RESTServiceApplication.getInstance().getUser();
+            contentValues.put(Constants.ID, user.getId());
+            contentValues.put(Constants.PASSWORD, mPasswordText.getText().toString());
+            contentValues.put(Constants.PHONE_NUMBER, mPhoneNumberText.getText().toString());
+            contentValues.put(Constants.NOTE, mNoteText.getText().toString());
+            contentValues.put(Constants.NAME, mNameText.getText().toString());
+
+            ContentValues urlValues = new ContentValues();
+            urlValues.put(Constants.ACCESS_TOKEN, RESTServiceApplication.getInstance().getAccessToken());
+
+
+            JSONObject jsonObject = WebServiceUtils.requestJSONObject(
+                    Constants.UPDATE_URL, WebServiceUtils.METHOD.POST,
+                    urlValues, contentValues);
+
+            if (!hasError(jsonObject)) {
+                JSONArray jsonArray = jsonObject.optJSONArray(Constants.INFO);
+                JSONObject jsonObject1 = jsonArray.optJSONObject(0);
+                user.setName(jsonObject1.optString(Constants.NAME));
+                user.setPhoneNumber(jsonObject1.optString(Constants.PHONE_NUMBER));
+                user.setNote(jsonObject1.optString(Constants.NOTE));
+                user.setPassword(jsonObject1.optString(Constants.PASSWORD));
+                return true;
+            }
+            return false;
         }
     }
 
@@ -134,10 +242,23 @@ public class MainActivity extends AppCompatActivity {
         public UserResetTask() {
             super(mUserResetTask);
         }
-
         @Override
         public boolean performRequest() {
-            return true;
+            ContentValues contentValues = new ContentValues();
+            User user = RESTServiceApplication.getInstance().getUser();
+            contentValues.put(Constants.ID, user.getId());
+            contentValues.put(Constants.ACCESS_TOKEN, RESTServiceApplication.getInstance().getAccessToken());
+
+            JSONObject jsonObject = WebServiceUtils.requestJSONObject(Constants.RESET_URL,
+                    WebServiceUtils.METHOD.POST, contentValues, null);
+
+            if (!hasError(jsonObject)) {
+                user.setName("");
+                user.setPhoneNumber("");
+                user.setNote("");
+                return true;
+            }
+            return false;
         }
     }
 
@@ -148,7 +269,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean performRequest() {
-            return true;
+            ContentValues contentValues = new ContentValues();
+            User user = RESTServiceApplication.getInstance().getUser();
+            contentValues.put(Constants.ID, user.getId());
+            contentValues.put(Constants.ACCESS_TOKEN, RESTServiceApplication.getInstance().getAccessToken());
+
+            JSONObject jsonObject = WebServiceUtils.requestJSONObject(Constants.DELETE_URL, WebServiceUtils.METHOD.DELETE,
+                    contentValues, null);
+
+            if (!hasError(jsonObject)) {
+                RESTServiceApplication.getInstance().setUser(null);
+                return true;
+            }
+            return false;
         }
     }
 
