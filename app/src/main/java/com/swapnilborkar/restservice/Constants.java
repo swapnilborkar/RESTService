@@ -11,11 +11,11 @@ public class Constants {
 
 
     //APPLICATION KEY AND SECRET FOR API ACCESS
-    public static final String APP_KEY = "INSERT_YOUR_KEY_HERE";
-    public static final String APP_SECRET = "INSERT_YOUR_SECRET_HERE";
+    public static final String APP_KEY = "ENTER_YOUR_APP_KEY_HERE";
+    public static final String APP_SECRET = "ENTER_YOUR_SECRET_HERE";
 
     //ENDPOINT FOR API ACCESS
-    public static final String END_POINT = "YOURDOMAIN/api";
+    public static final String END_POINT = "http://YOUR_DOMAIN/public_html/api";
     public static final String LOGIN_URL = END_POINT + "/login.php";
     public static final String SIGNUP_URL = END_POINT + "/signup.php";
     public static final String INFO_URL = END_POINT + "/info.php";

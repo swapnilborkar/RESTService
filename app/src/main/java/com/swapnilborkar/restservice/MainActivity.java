@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showProgress(boolean isShow) {
-        findViewById(R.id.progress).setVisibility(isShow ? View.VISIBLE : View.GONE);
-        findViewById(R.id.info_form).setVisibility(isShow ? View.VISIBLE : View.GONE);
+        findViewById(R.id.progress).setVisibility(isShow ? View.GONE : View.VISIBLE);
+        findViewById(R.id.info_form).setVisibility(isShow ? View.GONE : View.VISIBLE);
     }
 
     private void populateText() {
@@ -282,6 +282,11 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             return false;
+        }
+
+        @Override
+        public void performSuccessfulOperation() {
+            showLoginScreen();
         }
     }
 

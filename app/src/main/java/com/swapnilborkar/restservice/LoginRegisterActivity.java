@@ -104,18 +104,18 @@ public class LoginRegisterActivity extends AppCompatActivity {
 
         @Override
         public boolean performRequest() {
-            JSONObject obj = WebServiceUtils.requestJSONObject(mIsLogin ? Constants.LOGIN_URL : Constants.SIGNUP_URL,
+            JSONObject jsonObject = WebServiceUtils.requestJSONObject(mIsLogin ? Constants.LOGIN_URL : Constants.SIGNUP_URL,
                     WebServiceUtils.METHOD.POST, contentValues, true);
             mUserLoginRegisterTask = null;
 
-            if (!hasError(obj)) {
+            if (!hasError(jsonObject)) {
                 if (mIsLogin) {
                     User user = new User();
-                    user.setId(obj.optLong(Constants.ID));
+                    user.setId(jsonObject.optLong(Constants.ID));
                     user.setEmail(contentValues.getAsString(Constants.EMAIL));
                     user.setPassword(contentValues.getAsString(Constants.PASSWORD));
                     RESTServiceApplication.getInstance().setUser(user);
-                    RESTServiceApplication.getInstance().setAccessToken(obj.optJSONObject(Constants.ACCESS)
+                    RESTServiceApplication.getInstance().setAccessToken(jsonObject.optJSONObject(Constants.ACCESS)
                             .optString(Constants.ACCESS_TOKEN));
                     return true;
                 } else {
